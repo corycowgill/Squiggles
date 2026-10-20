@@ -1,0 +1,116 @@
+<title>Squiggles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&family=Patrick+Hand&display=swap">
+<style>
+  /* Layout: one full-bleed sheet of paper; the canvas is the page, DOM only for menus and two pen-drawn buttons. */
+  :root {
+    --paper: #f2f1ea;
+    --ink: #26222f;
+    --ink-soft: rgba(38, 34, 47, 0.55);
+    --pen: #2c3a91;      /* the player's blue ballpoint */
+    --maroon: #4b1c24;   /* the filled-in marker from the sketch */
+    --redpencil: #b13a2c;
+    --font-hand: "Reenie Beanie", "Segoe Print", "Comic Sans MS", cursive;
+    --font-body: "Patrick Hand", "Segoe Print", "Comic Sans MS", cursive;
+    color-scheme: light;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 18px;
+    overflow: hidden; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+  #safe { position: fixed; visibility: hidden; pointer-events: none;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+
+  .tools { position: fixed; z-index: 3; display: flex; gap: 8px;
+    top: calc(env(safe-area-inset-top, 0px) + 12px); right: max(16px, env(safe-area-inset-right, 0px)); }
+  .pen-btn {
+    width: 40px; height: 40px; border: 2px solid var(--ink); border-radius: 46% 54% 50% 50% / 55% 45% 55% 45%;
+    background: var(--paper); color: var(--ink); font: 22px/1 var(--font-body); cursor: pointer;
+    display: grid; place-items: center; padding: 0;
+  }
+  .pen-btn:hover { transform: rotate(-4deg); }
+  .pen-btn:focus-visible, .big-btn:focus-visible { outline: 3px dashed var(--pen); outline-offset: 3px; }
+
+  .overlay {
+    position: fixed; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; text-align: center; pointer-events: none;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: calc(env(safe-area-inset-top, 0px) + 24px) calc(env(safe-area-inset-bottom, 0px) + 24px);
+  }
+  .overlay > * { pointer-events: auto; }
+  .card {
+    background: var(--paper); border: 2px solid var(--ink); padding: 22px 26px 24px; max-width: 30rem; width: 100%;
+    border-radius: 3px 14px 4px 12px / 12px 4px 14px 3px; box-shadow: 5px 6px 0 rgba(38, 34, 47, 0.18);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    transform: rotate(-0.8deg);
+  }
+  h1 { margin: 0; font: 400 clamp(4rem, 17vw, 7.5rem)/0.8 var(--font-hand); letter-spacing: 0.01em; text-wrap: balance; }
+  h1 .blot { color: var(--maroon); }
+  h2 { margin: 0; font: 400 clamp(2.6rem, 10vw, 3.6rem)/0.9 var(--font-hand); text-wrap: balance; }
+  .tag { margin: 0; font-size: 1.15rem; line-height: 1.35; max-width: 26rem; color: var(--ink); text-wrap: balance; }
+  .small { margin: 0; font-size: 0.98rem; color: var(--ink-soft); line-height: 1.3; }
+  .codex { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px 10px; width: 100%; margin-block: 4px; }
+  .codex figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .codex canvas { width: 44px; height: 44px; }
+  .codex figcaption { font-size: 0.88rem; color: var(--ink-soft); letter-spacing: 0.02em; }
+  .big-btn {
+    font: 400 2.1rem/1 var(--font-hand); color: var(--paper); background: var(--ink); border: 0; cursor: pointer;
+    padding: 10px 30px 6px; border-radius: 40% 46% 42% 50% / 60% 50% 60% 50%; transform: rotate(1deg);
+  }
+  .big-btn:hover { background: var(--pen); }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .stats { display: flex; gap: 22px; justify-content: center; font-variant-numeric: tabular-nums; }
+  .stats div { display: flex; flex-direction: column; }
+  .stats b { font: 400 2.6rem/1 var(--font-hand); }
+  .stats span { font-size: 0.9rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.08em; }
+  @media (max-height: 560px) { .codex { display: none; } }
+</style>
+
+<canvas id="c" aria-label="Game page. Draw glyphs with your mouse or finger."></canvas>
+<div id="safe"></div>
+
+<div class="tools">
+  <button class="pen-btn" id="muteBtn" aria-label="Mute sound" title="Sound">♪</button>
+  <button class="pen-btn" id="pauseBtn" aria-label="Pause" title="Pause" hidden>II</button>
+</div>
+
+<div class="overlay" id="titleScreen">
+  <div class="card">
+    <h1>Squ<span class="blot">i</span>ggles</h1>
+    <p class="tag">Stray scribbles are climbing toward Blot's temple at the top of the ziggurat. Each one wears glyphs. Draw a glyph anywhere on the page to strip it off.</p>
+    <div class="codex" id="codex"></div>
+    <p class="small">Try drawing on the page behind this card. Glyphs unlock wave by wave.</p>
+    <button class="big-btn" id="startBtn">Begin</button>
+  </div>
+</div>
+
+<div class="overlay" id="pauseScreen" hidden>
+  <div class="card">
+    <h2>Pen down.</h2>
+    <p class="tag">The scribbles are waiting.</p>
+    <button class="big-btn" id="resumeBtn">Resume</button>
+  </div>
+</div>
+
+<div class="overlay" id="overScreen" hidden>
+  <div class="card">
+    <h2 id="overTitle">The page is overrun.</h2>
+    <div class="stats">
+      <div><b id="oScore">0</b><span>Score</span></div>
+      <div><b id="oWave">1</b><span>Wave</span></div>
+      <div><b id="oBest">0</b><span>Best</span></div>
+    </div>
+    <p class="small" id="oNote"></p>
+    <button class="big-btn" id="againBtn">Draw again</button>
+  </div>
+</div>
+
+<script src="recognizer.js"></script>
+<script src="game.js"></script>
