@@ -1,5 +1,7 @@
 # Squiggles
 
+*by Hallucinated Games*
+
 A glyph-drawing defense game grown from a ballpoint doodle: a stepped ziggurat with a shrine on top, a toothed sun in the corner, trails of circles, hatching, spirals, and meanders.
 
 Stray scribbles drift and crawl toward Blot, the ink blob living in the temple. Each scribble wears a stack of glyphs. Draw the front glyph anywhere on the page to strip it from **every** scribble wearing it; strip all of them and the scribble gets crossed out.
@@ -12,10 +14,11 @@ Stray scribbles drift and crawl toward Blot, the ink blob living in the temple. 
 
 ## Run it
 
-Open `index.html` in a browser. No build step; mouse, pen and touch all work.
+Open `index.html` in a browser. No build step; mouse, pen and touch all work. The Hallucinated Games studio intro plays first; click, tap or press a key to skip it, or add `?nointro` to the URL.
 
 ## Files
 
 - `index.html` – page, menus, styles
 - `game.js` – game loop, hand-drawn renderer (jittered "boiling" lines), WebAudio sound
+- `intro/hallucinated-intro.js` – the shared Hallucinated Games studio intro
 - `recognizer.js` – stroke recognizer: resampled template matching plus corner-count and axis-alignment features

@@ -835,5 +835,9 @@
   buildCodex();
   resize();
   requestAnimationFrame(frame);
+  // Hallucinated Games studio intro before the title (?nointro skips it)
+  if (window.HallucinatedIntro && !new URLSearchParams(location.search).has('nointro')) {
+    window.HallucinatedIntro.play({ sound: false }).catch(() => {});
+  }
   if (document.fonts && document.fonts.load) document.fonts.load(`40px ${HAND}`).catch(() => {});
 })();
